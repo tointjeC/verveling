@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeeslag 🚢 Maxine & Antoine</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --ocean: #0a1628;
+  --ocean-mid: #0f2744;
+  --ocean-light: #1a3a5c;
+  --wave: #1e5f8c;
+  --foam: #4db8e8;
+  --pink: #ff6b9d;
+  --pink-light: #ffb3d0;
+  --yellow: #ffd166;
+  --green: #06d6a0;
+  --red: #ef476f;
+  --white: #f0f8ff;
+}
+html, body { height: 100%; font-family: 'Nunito', sans-serif; background: var(--ocean); color: var(--white); overflow-x: hidden; }
+
+/* WAVES BG */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(30,95,140,0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,107,157,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 80%, rgba(77,184,232,0.1) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* BUBBLES */
+.bubble-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bbl { position: absolute; border-radius: 50%; background: rgba(77,184,232,0.06); border: 1px solid rgba(77,184,232,0.1); animation: rise linear infinite; }
+@keyframes rise {
+  0% { transform: translateY(110vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* SCREENS */
+.screen { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; }
+.screen.hidden { display: none; }
+
+/* LOBBY */
+.game-logo { font-family: 'Pacifico', cursive; font-size: clamp(2.5rem, 8vw, 4rem); margin-bottom: 0.3rem; background: linear-gradient(135deg, var(--foam), var(--pink-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.game-sub { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 2.5rem; font-weight: 600; letter-spacing: 0.1em; }
+
+.card { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2rem; width: 100%; max-width: 420px; backdrop-filter: blur(10px); }
+
+.btn { display: block; width: 100%; padding: 0.9rem 1.5rem; border-radius: 12px; border: none; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+.btn-primary { background: linear-gradient(135deg, var(--pink), #c04080); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,107,157,0.4); }
+.btn-ocean { background: linear-gradient(135deg, var(--foam), var(--wave)); color: white; }
+.btn-ocean:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(77,184,232,0.4); }
+.btn-green { background: linear-gradient(135deg, var(--green), #04a07a); color: white; }
+.btn-green:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(6,214,160,0.4); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+.input-row { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
+input[type=text] {
+  flex: 1; padding: 0.8rem 1rem; border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+  color: white; font-family: 'Nunito', sans-serif; font-size: 0.95rem; font-weight: 700;
+  outline: none; text-transform: uppercase; letter-spacing: 0.1em;
+}
+input::placeholder { color: rgba(255,255,255,0.3); text-transform: none; letter-spacing: 0; }
+input:focus { border-color: var(--foam); background: rgba(77,184,232,0.1); }
+
+.divider { text-align: center; color: rgba(255,255,255,0.3); margin: 1.2rem 0; font-size: 0.85rem; font-weight: 700; position: relative; }
+.divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(255,255,255,0.1); }
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+.room-code-display { text-align: center; margin: 1rem 0; }
+.room-code-big { font-family: 'Pacifico', cursive; font-size: 3rem; color: var(--yellow); letter-spacing: 0.15em; }
+.room-code-label { font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 0.15em; text-transform: uppercase; }
+.waiting-dots span { animation: blink 1.4s infinite; display: inline-block; }
+.waiting-dots span:nth-child(2) { animation-delay: 0.2s; }
+.waiting-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%,80%,100% { opacity: 0; } 40% { opacity: 1; } }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+.pill-waiting { background: rgba(255,209,102,0.15); color: var(--yellow); border: 1px solid rgba(255,209,102,0.3); }
+.pill-turn-you { background: rgba(6,214,160,0.15); color: var(--green); border: 1px solid rgba(6,214,160,0.3); }
+.pill-turn-opp { background: rgba(77,184,232,0.15); color: var(--foam); border: 1px solid rgba(77,184,232,0.3); }
+.pill-won { background: rgba(6,214,160,0.2); color: var(--green); border: 1px solid rgba(6,214,160,0.4); }
+.pill-lost { background: rgba(239,71,111,0.2); color: var(--red); border: 1px solid rgba(239,71,111,0.4); }
+
+/* PLACEMENT SCREEN */
+.placement-wrap { width: 100%; max-width: 600px; }
+.section-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 0.5rem; }
+.section-heading { font-family: 'Pacifico', cursive; font-size: 1.6rem; margin-bottom: 1.5rem; }
+
+.ships-palette { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.5rem; }
+.ship-btn {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.9rem; border-radius: 10px; border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06); color: white; font-family: 'Nunito', sans-serif;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s;
+}
+.ship-btn.selected { border-color: var(--foam); background: rgba(77,184,232,0.15); }
+.ship-btn.placed { border-color: rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.25); cursor: not-allowed; }
+.ship-cells { display: flex; gap: 2px; }
+.ship-cell-preview { width: 10px; height: 10px; border-radius: 2px; background: var(--foam); }
+.ship-btn.placed .ship-cell-preview { background: rgba(255,255,255,0.15); }
+
+.orientation-toggle {
+  display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem;
+}
+.toggle-btn {
+  padding: 0.4rem 1rem; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05); color: white; font-family: 'Nunito', sans-serif;
+  font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
+}
+.toggle-btn.active { border-color: var(--pink); background: rgba(255,107,157,0.15); color: var(--pink); }
+
+/* GRIDS */
+.grid-container { position: relative; }
+.grid {
+  display: grid;
+  grid-template-columns: 24px repeat(10, 1fr);
+  gap: 3px;
+  user-select: none;
+}
+.grid-header { display: contents; }
+.cell-label { display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; color: rgba(255,255,255,0.3); }
+.grid-row { display: contents; }
+
+.cell {
+  aspect-ratio: 1; border-radius: 4px;
+  background: rgba(10,22,40,0.6);
+  border: 1px solid rgba(77,184,232,0.08);
+  cursor: pointer; transition: all 0.1s;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+}
+.cell:hover { background: rgba(77,184,232,0.15); border-color: rgba(77,184,232,0.3); }
+.cell.ship { background: rgba(77,184,232,0.25); border-color: rgba(77,184,232,0.5); }
+.cell.ship::after { content: ''; position: absolute; inset: 2px; border-radius: 2px; background: rgba(77,184,232,0.3); }
+.cell.hit { background: rgba(239,71,111,0.3); border-color: var(--red); cursor: default; }
+.cell.hit::after { content: '💥'; position: absolute; font-size: 1rem; }
+.cell.miss { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); cursor: default; }
+.cell.miss::after { content: '●'; position: absolute; color: rgba(255,255,255,0.2); font-size: 0.6rem; }
+.cell.sunk { background: rgba(239,71,111,0.5); border-color: var(--red); }
+.cell.sunk::after { content: '🔥'; position: absolute; font-size: 0.85rem; }
+.cell.preview { background: rgba(77,184,232,0.2); border-color: rgba(77,184,232,0.4); }
+.cell.preview-invalid { background: rgba(239,71,111,0.2); border-color: rgba(239,71,111,0.4); }
+.cell.enemy:hover { background: rgba(239,71,111,0.15); border-color: rgba(239,71,111,0.3); }
+.cell.enemy.hit:hover, .cell.enemy.miss:hover, .cell.enemy.sunk:hover { background: initial; }
+.cell.no-cursor { cursor: not-allowed; }
+
+/* GAME SCREEN */
+.game-screen { width: 100%; max-width: 1100px; }
+.boards-row { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+.board-wrap { flex: 1; min-width: 280px; max-width: 440px; }
+.board-title { font-family: 'Pacifico', cursive; font-size: 1.2rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+.ships-left { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.ship-indicator { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; background: rgba(77,184,232,0.15); border: 1px solid rgba(77,184,232,0.3); color: var(--foam); }
+.ship-indicator.sunk { background: rgba(239,71,111,0.1); border-color: rgba(239,71,111,0.2); color: rgba(255,255,255,0.2); text-decoration: line-through; }
+
+.game-header { text-align: center; margin-bottom: 1.5rem; }
+.game-title { font-family: 'Pacifico', cursive; font-size: 1.6rem; margin-bottom: 0.5rem; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: rgba(10,22,40,0.95); border: 1.5px solid rgba(77,184,232,0.3);
+  border-radius: 14px; padding: 0.8rem 1.5rem; font-weight: 700; font-size: 0.95rem;
+  backdrop-filter: blur(10px); z-index: 999; transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* SPLASH HIT */
+.splash { position: fixed; pointer-events: none; z-index: 100; font-size: 3rem; animation: splashAnim 0.8s ease forwards; }
+@keyframes splashAnim { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+/* RESULT OVERLAY */
+.result-overlay {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,10,20,0.85); backdrop-filter: blur(8px);
+}
+.result-overlay.hidden { display: none; }
+.result-card { background: var(--ocean-mid); border: 2px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 3rem 2.5rem; text-align: center; max-width: 400px; width: 90%; }
+.result-emoji { font-size: 5rem; display: block; margin-bottom: 1rem; animation: bounceIn 0.5s ease; }
+@keyframes bounceIn { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.result-title { font-family: 'Pacifico', cursive; font-size: 2.5rem; margin-bottom: 0.5rem; }
+.result-sub { color: rgba(255,255,255,0.5); margin-bottom: 2rem; }
+
+/* MISC */
+.mb1 { margin-bottom: 0.6rem; }
+.mb2 { margin-bottom: 1.2rem; }
+.mt1 { margin-top: 0.6rem; }
+.mt2 { margin-top: 1.2rem; }
+.text-center { text-align: center; }
+.text-muted { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .boards-row { gap: 1rem; }
+  .cell { border-radius: 2px; }
+  .cell.hit::after, .cell.sunk::after { font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bubble-bg" id="bubbles"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ===== RESULT OVERLAY ===== -->
+<div class="result-overlay hidden" id="resultOverlay">
+  <div class="result-card">
+    <span class="result-emoji" id="resultEmoji">🏆</span>
+    <h2 class="result-title" id="resultTitle">Gewonnen!</h2>
+    <p class="result-sub" id="resultSub">Alle boten zijn gezonken!</p>
+    <button class="btn btn-primary" onclick="location.reload()">Opnieuw spelen 🔄</button>
+  </div>
+</div>
+
+<!-- ===== LOBBY SCREEN ===== -->
+<div class="screen" id="lobbyScreen">
+  <div class="game-logo">⚓ Zeeslag</div>
+  <p class="game-sub">MAXINE VS ANTOINE 🩷</p>
+
+  <div class="card">
+    <p class="section-label mb1">jouw naam</p>
+    <input type="text" id="nameInput" placeholder="Maxine of Antoine" maxlength="12" style="width:100%; margin-bottom:1.2rem">
+
+    <button class="btn btn-primary mb2" id="createBtn" onclick="createRoom()">✨ Nieuwe kamer maken</button>
+
+    <div class="divider">of join een kamer</div>
+
+    <div class="input-row mt1">
+      <input type="text" id="roomInput" placeholder="Kamer code" maxlength="4">
+      <button class="btn btn-ocean" style="width:auto; white-space:nowrap;" onclick="joinRoom()">Join 🚢</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WAITING SCREEN ===== -->
+<div class="screen hidden" id="waitingScreen">
+  <div class="game-logo">⚓ Zeeslag</div>
+  <div class="card text-center">
+    <p class="section-label mb1">kamer code</p>
+    <div class="room-code-display">
+      <div class="room-code-big" id="displayCode">----</div>
+    </div>
+    <p class="text-muted mb2">Stuur deze code naar <strong style="color:var(--pink-light)">Maxine of Antoine</strong> 💌</p>
+    <p style="font-weight:700; color:var(--foam);">Wachten op speler 2<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span></p>
+  </div>
+</div>
+
+<!-- ===== PLACEMENT SCREEN ===== -->
+<div class="screen hidden" id="placementScreen">
+  <div class="placement-wrap">
+    <p class="section-label">stap 1</p>
+    <h2 class="section-heading">Plaats je vloot! 🚢</h2>
+
+    <div class="ships-palette" id="shipsPalette"></div>
+
+    <div class="orientation-toggle">
+      <span class="text-muted" style="font-weight:700;">Richting:</span>
+      <button class="toggle-btn active" id="hBtn" onclick="setOrientation('h')">↔ Horizontaal</button>
+      <button class="toggle-btn" id="vBtn" onclick="setOrientation('v')">↕ Verticaal</button>
+    </div>
+
+    <div class="grid-container mb2">
+      <div class="grid" id="placementGrid"></div>
+    </div>
+
+    <button class="btn btn-green" id="readyBtn" onclick="confirmPlacement()" disabled>✅ Klaar! Ga naar gevecht</button>
+    <button class="btn mt1" style="background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.1);" onclick="resetPlacement()">🔄 Opnieuw plaatsen</button>
+  </div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div class="screen hidden" id="gameScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <div class="game-title">⚓ Zeeslag</div>
+      <div id="statusPill" class="status-pill pill-waiting">⏳ Laden...</div>
+    </div>
+
+    <div class="boards-row">
+      <!-- Enemy board -->
+      <div class="board-wrap">
+        <div class="board-title">🎯 <span id="enemyName">Tegenstander</span></div>
+        <div class="grid" id="enemyGrid"></div>
+        <div class="ships-left" id="enemyShipsLeft"></div>
+      </div>
+
+      <!-- Own board -->
+      <div class="board-wrap">
+        <div class="board-title">🛡️ Jouw vloot</div>
+        <div class="grid" id="myGrid"></div>
+        <div class="ships-left" id="myShipsLeft"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, update, onValue, push } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+// ===== FIREBASE CONFIG =====
+// 🔧 VERVANG DIT MET JOUW EIGEN FIREBASE CONFIG
+// Ga naar https://console.firebase.google.com → nieuw project → Realtime Database → web app
+const firebaseConfig = {
+  apiKey: "AIzaSyDemo-VervangDitMetJouweigenConfig",
+  authDomain: "jouw-project.firebaseapp.com",
+  databaseURL: "https://jouw-project-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "jouw-project",
+  storageBucket: "jouw-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
+};
+
+// ===== SHIP DEFINITIONS =====
+const SHIPS = [
+  { id: 'carrier',    name: 'Carrier',     size: 5, emoji: '🛳️' },
+  { id: 'battleship', name: 'Slagschip',   size: 4, emoji: '⚔️' },
+  { id: 'cruiser',    name: 'Kruiser',     size: 3, emoji: '🚢' },
+  { id: 'submarine',  name: 'Onderzeeër',  size: 3, emoji: '🤿' },
+  { id: 'destroyer',  name: 'Destroyer',   size: 2, emoji: '⛵' },
+];
+
+const COLS = ['A','B','C','D','E','F','G','H','I','J'];
+
+// ===== STATE =====
+let app, db;
+let roomId = null, myRole = null, myName = null;
+let orientation = 'h';
+let selectedShip = null;
+let placedShips = {};      // { shipId: [{r,c},...] }
+let myBoard = Array(10).fill(null).map(() => Array(10).fill(null));
+let enemyBoard = Array(10).fill(null).map(() => Array(10).fill(null));
+let placementCells = [];
+let gameListener = null;
+
+// ===== INIT =====
+try {
+  app = initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} catch(e) {
+  showDemoMode();
+}
+
+function showDemoMode() {
+  // Als Firebase niet geconfigureerd is, toon instructies
+  document.getElementById('lobbyScreen').innerHTML = `
+    <div class="game-logo">⚓ Zeeslag</div>
+    <p class="game-sub">MAXINE VS ANTOINE 🩷</p>
+    <div class="card">
+      <p style="font-size:1.1rem; font-weight:800; color:var(--yellow); margin-bottom:1rem;">🔧 Firebase instellen</p>
+      <p style="color:rgba(255,255,255,0.7); line-height:1.8; font-size:0.9rem;">
+        Om online samen te spelen heb je een gratis Firebase account nodig:<br><br>
+        1️⃣ Ga naar <a href="https://console.firebase.google.com" target="_blank" style="color:var(--foam);">console.firebase.google.com</a><br>
+        2️⃣ Maak een nieuw project aan<br>
+        3️⃣ Ga naar <strong>Realtime Database</strong> → aanmaken<br>
+        4️⃣ Ga naar <strong>Projectinstellingen</strong> → Web app<br>
+        5️⃣ Kopieer de config en plak die in de code bij <code style="color:var(--foam);">firebaseConfig</code><br><br>
+        Daarna werkt het spel live tussen twee toestellen! 🎮
+      </p>
+      <div style="margin-top:1.5rem; padding:1rem; background:rgba(77,184,232,0.08); border-radius:10px; border:1px dashed rgba(77,184,232,0.3);">
+        <p style="font-size:0.8rem; color:var(--foam); font-weight:700;">💡 Regels instellen in Firebase:</p>
+        <pre style="font-size:0.75rem; color:rgba(255,255,255,0.6); margin-top:0.5rem; white-space:pre-wrap;">{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</pre>
+      </div>
+    </div>
+  `;
+}
+
+// ===== BUBBLES =====
+const bubbleEl = document.getElementById('bubbles');
+for(let i=0;i<20;i++){
+  const b = document.createElement('div');
+  b.className='bbl';
+  const s = 20+Math.random()*60;
+  b.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${15+Math.random()*20}s;animation-delay:${Math.random()*20}s;`;
+  bubbleEl.appendChild(b);
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg, duration=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ===== SPLASH =====
+function showSplash(emoji) {
+  const s = document.createElement('div');
+  s.className = 'splash'; s.textContent = emoji;
+  s.style.cssText = `left:${30+Math.random()*40}%;top:${20+Math.random()*40}%;`;
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 900);
+}
+
+// ===== ROOM CODES =====
+function genCode() {
+  return Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
+// ===== SHOW/HIDE SCREENS =====
+function showScreen(id) {
+  ['lobbyScreen','waitingScreen','placementScreen','gameScreen'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ===== CREATE ROOM =====
+window.createRoom = async function() {
+  myName = document.getElementById('nameInput').value.trim() || 'Speler 1';
+  const code = genCode();
+  roomId = code;
+  myRole = 'player1';
+
+  await set(ref(db, `rooms/${code}`), {
+    status: 'waiting',
+    player1: { name: myName, ready: false, board: null },
+    player2: null,
+    currentTurn: 'player1',
+    shots: { player1: [], player2: [] }
+  });
+
+  document.getElementById('displayCode').textContent = code;
+  showScreen('waitingScreen');
+
+  // Listen for player2
+  onValue(ref(db, `rooms/${code}/player2`), snap => {
+    if(snap.val() && snap.val().name) {
+      showToast(`${snap.val().name} heeft de kamer gejoint! 🎉`);
+      startPlacement();
+    }
+  });
+};
+
+// ===== JOIN ROOM =====
+window.joinRoom = async function() {
+  myName = document.getElementById('nameInput').value.trim() || 'Speler 2';
+  const code = document.getElementById('roomInput').value.trim().toUpperCase();
+  if(code.length !== 4) { showToast('Vul een geldige 4-letter code in!'); return; }
+
+  const snap = await get(ref(db, `rooms/${code}`));
+  if(!snap.exists()) { showToast('❌ Kamer niet gevonden!'); return; }
+  if(snap.val().player2) { showToast('❌ Kamer is vol!'); return; }
+
+  roomId = code;
+  myRole = 'player2';
+
+  await update(ref(db, `rooms/${code}/player2`), { name: myName, ready: false, board: null });
+  startPlacement();
+};
+
+// ===== PLACEMENT =====
+function startPlacement() {
+  showScreen('placementScreen');
+  buildShipsPalette();
+  buildGrid('placementGrid', placementCells, 'placement');
+}
+
+function buildShipsPalette() {
+  const palette = document.getElementById('shipsPalette');
+  palette.innerHTML = '';
+  SHIPS.forEach(ship => {
+    const btn = document.createElement('button');
+    btn.className = 'ship-btn' + (placedShips[ship.id] ? ' placed' : '');
+    btn.id = 'ship-btn-' + ship.id;
+    btn.onclick = () => selectShip(ship);
+    btn.innerHTML = `
+      ${ship.emoji} ${ship.name}
+      <div class="ship-cells">${'<div class="ship-cell-preview"></div>'.repeat(ship.size)}</div>
+    `;
+    palette.appendChild(btn);
+  });
+}
+
+function buildGrid(gridId, cellsArr, mode) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+
+  // Header row
+  const corner = document.createElement('div'); corner.className = 'cell-label'; grid.appendChild(corner);
+  COLS.forEach(c => { const l = document.createElement('div'); l.className = 'cell-label'; l.textContent = c; grid.appendChild(l); });
+
+  cellsArr.length = 0;
+  for(let r=0; r<10; r++) {
+    const rowLabel = document.createElement('div');
+    rowLabel.className = 'cell-label'; rowLabel.textContent = r+1;
+    grid.appendChild(rowLabel);
+    for(let c=0; c<10; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r; cell.dataset.c = c;
+      if(mode === 'placement') {
+        cell.onmouseenter = () => hoverPlacement(r, c);
+        cell.onmouseleave = () => clearPreview();
+        cell.onclick = () => placeCellClick(r, c);
+      } else if(mode === 'enemy') {
+        cell.classList.add('enemy');
+        cell.onclick = () => fireShot(r, c);
+      }
+      cellsArr.push(cell);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function getIdx(r, c) { return r*10+c; }
+
+function hoverPlacement(r, c) {
+  if(!selectedShip) return;
+  clearPreview();
+  const coords = getShipCoords(r, c, selectedShip.size, orientation);
+  const valid = isValidPlacement(coords);
+  coords.forEach(([sr,sc]) => {
+    if(sr>=0&&sr<10&&sc>=0&&sc<10) {
+      placementCells[getIdx(sr,sc)].classList.add(valid ? 'preview' : 'preview-invalid');
+    }
+  });
+}
+
+function clearPreview() {
+  placementCells.forEach(c => { c.classList.remove('preview','preview-invalid'); });
+}
+
+function getShipCoords(r, c, size, dir) {
+  const coords = [];
+  for(let i=0; i<size; i++) {
+    coords.push(dir==='h' ? [r, c+i] : [r+i, c]);
+  }
+  return coords;
+}
+
+function isValidPlacement(coords) {
+  for(const [r,c] of coords) {
+    if(r<0||r>=10||c<0||c>=10) return false;
+    if(myBoard[r][c] !== null) return false;
+  }
+  return true;
+}
+
+function placeCellClick(r, c) {
+  if(!selectedShip) { showToast('Selecteer eerst een schip! 👆'); return; }
+  if(placedShips[selectedShip.id]) return;
+  const coords = getShipCoords(r, c, selectedShip.size, orientation);
+  if(!isValidPlacement(coords)) { showToast('❌ Kan hier niet plaatsen!'); return; }
+
+  // Place it
+  coords.forEach(([sr,sc]) => {
+    myBoard[sr][sc] = selectedShip.id;
+    placementCells[getIdx(sr,sc)].classList.add('ship');
+  });
+  placedShips[selectedShip.id] = coords;
+
+  // Deselect
+  document.getElementById('ship-btn-'+selectedShip.id).classList.remove('selected');
+  document.getElementById('ship-btn-'+selectedShip.id).classList.add('placed');
+  selectedShip = null;
+  clearPreview();
+
+  // Check if all placed
+  if(Object.keys(placedShips).length === SHIPS.length) {
+    document.getElementById('readyBtn').disabled = false;
+    showToast('Alle schepen geplaatst! Druk op Klaar! 🚀');
+  }
+
+  buildShipsPalette();
+}
+
+function selectShip(ship) {
+  if(placedShips[ship.id]) return;
+  selectedShip = ship;
+  buildShipsPalette();
+  document.getElementById('ship-btn-'+ship.id).classList.add('selected');
+}
+
+window.setOrientation = function(o) {
+  orientation = o;
+  document.getElementById('hBtn').classList.toggle('active', o==='h');
+  document.getElementById('vBtn').classList.toggle('active', o==='v');
+};
+
+window.resetPlacement = function() {
+  placedShips = {};
+  myBoard = Array(10).fill(null).map(() => Array(10).fill(null));
+  selectedShip = null;
+  buildShipsPalette();
+  placementCells.forEach(c => { c.className = 'cell'; });
+  c.onmouseenter = () => hoverPlacement(+c.dataset.r, +c.dataset.c);
+  document.getElementById('readyBtn').disabled = true;
+};
+
+window.confirmPlacement = async function() {
+  // Serialize board (just ship ids, no coords visible to opponent)
+  const boardData = myBoard.map(row => row.map(cell => cell ? cell : ''));
+  await update(ref(db, `rooms/${roomId}/${myRole}`), { ready: true, board: boardData });
+  showToast('⏳ Wachten op tegenstander...');
+  document.getElementById('readyBtn').disabled = true;
+  document.getElementById('readyBtn').textContent = '⏳ Wachten op tegenstander...';
+
+  // Listen for both ready → start game
+  onValue(ref(db, `rooms/${roomId}`), snap => {
+    const d = snap.val();
+    if(!d) return;
+    if(d.player1?.ready && d.player2?.ready) {
+      startGame(d);
+    }
+  });
+};
+
+// ===== GAME =====
+let enemyBoardData = null;
+let myShotsList = [];
+let oppShotsList = [];
+let myShipsStatus = {};
+let enemyShipsStatus = {};
+let myGridCells = [], enemyGridCells = [];
+
+function startGame(data) {
+  if(document.getElementById('gameScreen').classList.contains('hidden') === false) return;
+  showScreen('gameScreen');
+
+  const oppRole = myRole === 'player1' ? 'player2' : 'player1';
+  const oppName = data[oppRole]?.name || 'Tegenstander';
+  document.getElementById('enemyName').textContent = oppName;
+
+  enemyBoardData = data[oppRole].board;
+
+  buildGrid('myGrid', myGridCells, 'my');
+  buildGrid('enemyGrid', enemyGridCells, 'enemy');
+
+  // Draw my ships
+  myBoard.forEach((row, r) => row.forEach((cell, c) => {
+    if(cell) myGridCells[getIdx(r,c)].classList.add('ship');
+  }));
+
+  // Init ship statuses
+  SHIPS.forEach(s => { myShipsStatus[s.id] = true; enemyShipsStatus[s.id] = true; });
+
+  // Listen for game updates
+  if(gameListener) gameListener();
+  gameListener = onValue(ref(db, `rooms/${roomId}`), snap => {
+    const d = snap.val();
+    if(!d) return;
+    updateGameState(d);
+  });
+}
+
+function updateGameState(data) {
+  const oppRole = myRole === 'player1' ? 'player2' : 'player1';
+  const shots = data.shots || {};
+  const myShots = shots[myRole] || [];
+  const oppShots = shots[oppRole] || [];
+
+  // Process opponent shots on MY board
+  oppShots.forEach(shot => {
+    if(!oppShotsList.includes(shot)) {
+      oppShotsList.push(shot);
+      const [r,c] = shot.split(',').map(Number);
+      const hitShip = myBoard[r][c];
+      if(hitShip) {
+        myGridCells[getIdx(r,c)].classList.remove('ship');
+        // Check if whole ship sunk
+        const sunk = checkSunk(hitShip, myBoard, oppShots.map(s => s.split(',').map(Number)));
+        myGridCells[getIdx(r,c)].classList.add(sunk ? 'sunk' : 'hit');
+        if(sunk) {
+          myShipsStatus[hitShip] = false;
+          showToast(`💔 Je ${SHIPS.find(s=>s.id===hitShip).name} is gezonken!`);
+        }
+      } else {
+        myGridCells[getIdx(r,c)].classList.add('miss');
+      }
+    }
+  });
+
+  // Process MY shots on enemy board
+  myShots.forEach(shot => {
+    if(!myShotsList.includes(shot)) {
+      myShotsList.push(shot);
+      const [r,c] = shot.split(',').map(Number);
+      const hitShip = enemyBoardData[r][c];
+      if(hitShip) {
+        const sunk = checkSunk(hitShip, enemyBoardData, myShots.map(s => s.split(',').map(Number)));
+        enemyGridCells[getIdx(r,c)].classList.add(sunk ? 'sunk' : 'hit');
+        if(sunk) {
+          enemyShipsStatus[hitShip] = false;
+          showToast(`💥 Je hebt de ${SHIPS.find(s=>s.id===hitShip).name} gezonken!`);
+        }
+      } else {
+        enemyGridCells[getIdx(r,c)].classList.add('miss');
+      }
+    }
+  });
+
+  // Update ship indicators
+  updateShipIndicators();
+
+  // Check win/loss
+  const allEnemySunk = Object.values(enemyShipsStatus).every(v => !v);
+  const allMySunk = Object.values(myShipsStatus).every(v => !v);
+  if(allEnemySunk) { showResult(true); return; }
+  if(allMySunk) { showResult(false); return; }
+
+  // Update turn
+  const isMyTurn = data.currentTurn === myRole;
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill ' + (isMyTurn ? 'pill-turn-you' : 'pill-turn-opp');
+  pill.textContent = isMyTurn ? '🎯 Jij schiet!' : `⏳ ${document.getElementById('enemyName').textContent} schiet...`;
+
+  // Toggle enemy grid clickability
+  enemyGridCells.forEach(cell => {
+    if(!cell.classList.contains('hit') && !cell.classList.contains('miss') && !cell.classList.contains('sunk')) {
+      cell.classList.toggle('no-cursor', !isMyTurn);
+    }
+  });
+}
+
+function checkSunk(shipId, board, shotCoords) {
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++) {
+    if(board[r][c] === shipId) {
+      const washot = shotCoords.some(([sr,sc]) => sr===r && sc===c);
+      if(!washot) return false;
+    }
+  }
+  return true;
+}
+
+async function fireShot(r, c) {
+  const snap = await get(ref(db, `rooms/${roomId}/currentTurn`));
+  if(snap.val() !== myRole) { showToast('⏳ Niet jouw beurt!'); return; }
+
+  const cell = enemyGridCells[getIdx(r,c)];
+  if(cell.classList.contains('hit') || cell.classList.contains('miss') || cell.classList.contains('sunk')) {
+    showToast('Al geschoten op dit vakje!'); return;
+  }
+
+  // Add shot
+  const shotKey = `${r},${c}`;
+  const shotsSnap = await get(ref(db, `rooms/${roomId}/shots/${myRole}`));
+  const existing = shotsSnap.val() || [];
+  if(existing.includes(shotKey)) return;
+  existing.push(shotKey);
+
+  const hitShip = enemyBoardData[r][c];
+  showSplash(hitShip ? '💥' : '💦');
+
+  const oppRole = myRole === 'player1' ? 'player2' : 'player1';
+  await update(ref(db, `rooms/${roomId}`), {
+    [`shots/${myRole}`]: existing,
+    currentTurn: hitShip ? myRole : oppRole  // keep turn on hit!
+  });
+
+  if(hitShip) showToast('🎯 Raak!!! 💥');
+  else showToast('💧 Mis...');
+}
+
+function updateShipIndicators() {
+  const myEl = document.getElementById('myShipsLeft');
+  const enEl = document.getElementById('enemyShipsLeft');
+  myEl.innerHTML = SHIPS.map(s => `<span class="ship-indicator${myShipsStatus[s.id]?'':' sunk'}">${s.emoji}</span>`).join('');
+  enEl.innerHTML = SHIPS.map(s => `<span class="ship-indicator${enemyShipsStatus[s.id]?'':' sunk'}">${s.emoji}</span>`).join('');
+}
+
+function showResult(won) {
+  const overlay = document.getElementById('resultOverlay');
+  overlay.classList.remove('hidden');
+  document.getElementById('resultEmoji').textContent = won ? '🏆' : '😢';
+  document.getElementById('resultTitle').textContent = won ? 'Gewonnen!! 🎉' : 'Verloren...';
+  document.getElementById('resultSub').textContent = won
+    ? 'Alle boten van de tegenstander zijn gezonken!'
+    : 'Al jouw boten zijn gezonken. Volgende keer beter!';
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill ' + (won ? 'pill-won' : 'pill-lost');
+  pill.textContent = won ? '🏆 Gewonnen!' : '😢 Verloren';
+}
+</script>
+</body>
+</html>
