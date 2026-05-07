@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voor Maxine ❤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a96e;
+    --gold-light: #e8d0a0;
+    --gold-dim: rgba(201,169,110,0.18);
+    --cream: #f5e6d3;
+    --cream-dim: rgba(245,230,211,0.6);
+    --cream-faint: rgba(245,230,211,0.3);
+    --bg: #07040f;
+    --bg2: #0d0818;
+    --rose: #c97a8a;
+    --rose-dim: rgba(201,122,138,0.15);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    font-family: 'EB Garamond', serif;
+    color: var(--cream);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* ── CANVAS ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── PETALS ── */
+  .petal {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    font-size: 1rem;
+    animation: petalFall linear forwards;
+  }
+
+  @keyframes petalFall {
+    0%   { opacity: 0; transform: translateY(-20px) rotate(0deg); }
+    10%  { opacity: 0.7; }
+    90%  { opacity: 0.5; }
+    100% { opacity: 0; transform: translateY(110vh) rotate(360deg); }
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative;
+    z-index: 2;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 0;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.75rem;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: riseIn 1.2s 0.3s cubic-bezier(.16,1,.3,1) forwards;
+  }
+
+  .hero-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 14vw, 8rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 0.9;
+    color: var(--cream);
+    text-shadow: 0 0 80px rgba(201,169,110,0.25), 0 0 160px rgba(201,169,110,0.1);
+    opacity: 0;
+    animation: riseIn 1.4s 0.7s cubic-bezier(.16,1,.3,1) forwards;
+    position: relative;
+  }
+
+  .hero-name span {
+    display: block;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 300;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-top: 0.6rem;
+  }
+
+  .hero-tag {
+    margin-top: 2.5rem;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--cream-dim);
+    opacity: 0;
+    animation: riseIn 1s 1.4s forwards;
+    line-height: 1.7;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gold);
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: riseIn 1s 2.5s forwards;
+  }
+
+  .scroll-hint::after {
+    content: '';
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollLine 2s 3s infinite;
+  }
+
+  @keyframes scrollLine {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+  }
+
+  /* ── ORNAMENT ── */
+  .ornament {
+    text-align: center;
+    margin: 3rem 0;
+    color: var(--gold);
+    opacity: 0.4;
+    font-size: 1.2rem;
+    letter-spacing: 12px;
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+    margin: 0.5rem 0;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin-bottom: 4rem;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.68rem;
+    letter-spacing: 7px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--gold-dim), transparent);
+  }
+
+  /* ── LETTER ── */
+  .letter {
+    background: linear-gradient(135deg, rgba(201,169,110,0.05), rgba(201,122,138,0.04), transparent);
+    border: 1px solid var(--gold-dim);
+    border-radius: 1px;
+    padding: 3rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .letter::before {
+    content: '\201C';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 10rem;
+    color: var(--gold);
+    opacity: 0.07;
+    position: absolute;
+    top: -2rem;
+    left: 1rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .letter::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle at top right, rgba(201,122,138,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .letter p {
+    font-size: 1.15rem;
+    line-height: 2;
+    color: rgba(245,230,211,0.85);
+    margin-bottom: 1.4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .letter p:first-child {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--cream);
+  }
+
+  .letter .em {
+    color: var(--gold-light);
+    font-style: italic;
+  }
+
+  .letter .rose {
+    color: #e8a0ae;
+    font-style: italic;
+  }
+
+  /* ── TROPHIES ── */
+  .trophies {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .trophy {
+    border: 1px solid var(--gold-dim);
+    padding: 1.8rem 1rem 1.5rem;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.4s, background 0.4s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  .trophy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, var(--rose-dim), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .trophy:hover {
+    border-color: rgba(201,169,110,0.5);
+    background: rgba(201,169,110,0.05);
+    transform: translateY(-4px);
+  }
+
+  .trophy:hover::before { opacity: 1; }
+
+  .trophy-icon { font-size: 2.2rem; display: block; margin-bottom: 0.8rem; }
+
+  .trophy-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .trophy-sub {
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--cream-dim);
+    line-height: 1.5;
+  }
+
+  /* ── COUNTDOWN ── */
+  .countdown-wrap {
+    text-align: center;
+  }
+
+  .countdown-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+  }
+
+  .countdown-sub {
+    font-style: italic;
+    color: var(--cream-dim);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .cd-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .cd-box {
+    min-width: 90px;
+    padding: 1.5rem 1.2rem 1rem;
+    border: 1px solid var(--gold-dim);
+    background: rgba(255,255,255,0.02);
+    text-align: center;
+    position: relative;
+  }
+
+  .cd-box::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 15%; right: 15%;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+
+  .cd-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--cream);
+    display: block;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+
+  .cd-num.tick { animation: tick 0.25s ease; }
+
+  @keyframes tick {
+    0%   { transform: scale(1.12); color: var(--gold-light); }
+    100% { transform: scale(1); color: var(--cream); }
+  }
+
+  .cd-label {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 0.5rem;
+    display: block;
+  }
+
+  .return-box {
+    display: inline-block;
+    border: 1px solid rgba(201,169,110,0.35);
+    padding: 2rem 3.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .return-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(201,169,110,0.07), transparent 70%);
+  }
+
+  .return-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+  }
+
+  .return-sub {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--cream-dim);
+    line-height: 1.7;
+  }
+
+  /* ── TOGETHER LIST ── */
+  .together-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--cream);
+    text-align: center;
+    margin-bottom: 2rem;
+    line-height: 1.3;
+  }
+
+  .together-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  .together-item {
+    border: 1px solid rgba(201,169,110,0.1);
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: 0.92rem;
+    color: rgba(245,230,211,0.7);
+    font-style: italic;
+    line-height: 1.5;
+    transition: border-color 0.3s, background 0.3s, color 0.3s, transform 0.3s;
+    cursor: default;
+  }
+
+  .together-item:hover {
+    border-color: rgba(201,169,110,0.35);
+    background: rgba(201,169,110,0.04);
+    color: var(--cream);
+    transform: translateX(4px);
+  }
+
+  .together-item .ico { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── CLOSING ── */
+  .closing {
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .closing-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.3rem, 3.5vw, 1.9rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--cream);
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .closing-sig {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-style: italic;
+    color: var(--gold);
+    margin-bottom: 0.4rem;
+  }
+
+  .closing-tag {
+    font-size: 0.72rem;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(245,230,211,0.25);
+  }
+
+  /* ── PARTY BTN ── */
+  .party-btn {
+    display: inline-block;
+    margin-top: 2.5rem;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    padding: 0.9rem 3rem;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: background 0.3s, color 0.3s, transform 0.2s;
+  }
+
+  .party-btn:hover {
+    background: var(--gold);
+    color: var(--bg);
+    transform: scale(1.03);
+  }
+
+  /* ── MUSIC NOTE CURSOR ── */
+  .cursor-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: screen;
+  }
+
+  /* ── CONFETTI ── */
+  .confetti {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    border-radius: 2px;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="cursor-dot" id="cursor"></div>
+
+<div class="wrapper">
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">Een bericht van mijn hart naar het jouwe</p>
+    <h1 class="hero-name">
+      Maxine
+      <span>Vangheluwe</span>
+    </h1>
+    <p class="hero-tag">
+      Erasmus — Madrid &nbsp;·&nbsp; Laatste examen vandaag gehaald<br>
+      <em style="color:var(--gold); font-size:1.05rem;">Je hebt het gedaan, lieve schat.</em>
+    </p>
+    <div class="scroll-hint">scroll</div>
+  </section>
+
+  <!-- LETTER -->
+  <section class="section">
+    <p class="section-label">Mijn brief voor jou</p>
+    <div class="letter">
+      <p>Lieve, heerlijke Maxine,</p>
+      <p>
+        Vandaag deed je jouw <span class="em">laatste examen in Madrid</span> — en ik zat hier, kilometers ver,
+        met een borst vol trots die ik nauwelijks kon bevatten.
+        Je weet niet hoe ik naar jou verlang. Niet alleen om je te knuffelen,
+        maar om je echt te <span class="rose">voelen</span> — jouw warmte, jouw lach, jouw huid tegen de mijne.
+      </p>
+      <p>
+        Je bent maanden ver van huis gegaan. In een vreemde stad, met een vreemde taal,
+        zonder mij naast je. En toch bleef je staan. Je bent niet gebroken —
+        je bent <span class="em">harder en mooier geworden</span>, zoals goud dat door vuur gaat.
+      </p>
+      <p>
+        Ik denk elke dag aan je. Aan hoe je eruitziet als je wakker wordt.
+        Aan hoe je ruikt als ik mijn neus in je haar begraaf.
+        Aan de manier waarop je lacht wanneer ik iets doms zeg.
+        Ik mis je <span class="rose">op een manier die pijn doet</span> — en tegelijk weet ik dat elke dag die voorbijgaat,
+        ons dichter brengt bij het moment dat ik je eindelijk weer in mijn armen kan trekken
+        en niet meer loslaten.
+      </p>
+      <p>
+        Je bent de slimste, sterkste en <span class="rose">meest verdomd aantrekkelijke</span> vrouw die ik ken.
+        En ik ga je dat persoonlijk bewijzen zodra je thuis bent. 😏
+      </p>
+      <p style="color:var(--gold-light); font-style:italic; font-size:1.1rem;">
+        Ik hou van jou — met alles wat ik ben.
+      </p>
+    </div>
+  </section>
+
+  <div class="ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+
+  <!-- BADGES -->
+  <section class="section">
+    <p class="section-label">Wat jij bewezen hebt</p>
+    <div class="trophies">
+      <div class="trophy">
+        <span class="trophy-icon">🎓</span>
+        <span class="trophy-title">Examen held</span>
+        <span class="trophy-sub">Laatste examen in Madrid — afgehakt. Done. Klaar.</span>
+      </div>
+      <div class="trophy">
+        <span class="trophy-icon">🌍</span>
+        <span class="trophy-title">Erasmus overleefd</span>
+        <span class="trophy-sub">Een heel semester ver van huis. Alleen. En toch sterk gebleven.</span>
+      </div>
+      <div class="trophy">
+        <span class="trophy-icon">💪</span>
+        <span class="trophy-title">Onbreekbaar</span>
+        <span class="trophy-sub">Gevallen, opgestaan, doorgedaan. Jij bent een kracht van de natuur.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COUNTDOWN -->
+  <section class="section">
+    <div class="countdown-wrap">
+      <p class="section-label" style="justify-content:center;">Aftelling tot thuis</p>
+      <h2 class="countdown-title">Nog maar even geduld, mijn liefste…</h2>
+      <p class="countdown-sub">Elke seconde die tikt brengt jou dichter bij mij</p>
+
+      <div class="cd-grid">
+        <div class="cd-box">
+          <span class="cd-num" id="cd-d">--</span>
+          <span class="cd-label">Dagen</span>
+        </div>
+        <div class="cd-box">
+          <span class="cd-num" id="cd-h">--</span>
+          <span class="cd-label">Uren</span>
+        </div>
+        <div class="cd-box">
+          <span class="cd-num" id="cd-m">--</span>
+          <span class="cd-label">Minuten</span>
+        </div>
+        <div class="cd-box">
+          <span class="cd-num" id="cd-s">--</span>
+          <span class="cd-label">Seconden</span>
+        </div>
+      </div>
+
+      <div class="return-box">
+        <span class="return-date">26 mei 2025</span>
+        <p class="return-sub">
+          De dag dat ik de deur opendoe en jij er staat.<br>
+          De dag dat ik je eindelijk weer <em>écht</em> kan kussen.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+
+  <!-- TOGETHER -->
+  <section class="section">
+    <h2 class="together-title">
+      Alles wat we eindelijk<br>
+      <em>samen</em> gaan doen
+    </h2>
+    <div class="together-grid">
+      <div class="together-item"><span class="ico">☕</span><span>Samen koffie drinken — jij in mijn hoodie, wij op de bank</span></div>
+      <div class="together-item"><span class="ico">🛏️</span><span>Gewoon naast elkaar liggen, zonder tijdsverschil tussen ons</span></div>
+      <div class="together-item"><span class="ico">🍕</span><span>Pizza eten om middernacht zoals we altijd deden</span></div>
+      <div class="together-item"><span class="ico">🎬</span><span>Films kijken tot we in slaap vallen op dezelfde zetel</span></div>
+      <div class="together-item"><span class="ico">🌅</span><span>Zonsondergangen bekijken met mijn armen om je heen</span></div>
+      <div class="together-item"><span class="ico">💃</span><span>Dansen in de keuken terwijl het eten aanbrandt</span></div>
+      <div class="together-item"><span class="ico">🫦</span><span>Je eindelijk weer kussen zoals je dat verdient</span></div>
+      <div class="together-item"><span class="ico">🤍</span><span>Gewoon bij jou zijn — dat is alles wat ik nodig heb</span></div>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section class="section closing">
+    <div class="divider" style="margin-bottom:2.5rem;"></div>
+    <p class="closing-quote">
+      "Je hebt jezelf bewezen aan de wereld.<br>
+      Nu mag je thuiskomen en je laten verwennen<br>
+      door iemand die gek op je is."
+    </p>
+    <p class="closing-sig">Ik hou van jou ❤</p>
+    <p class="closing-tag">Tot 26 mei — dan is het voorbij met het wachten</p>
+    <br>
+    <button class="party-btn" onclick="celebrate()">🎉 Vier het mee, Maxine!</button>
+  </section>
+
+</div>
+
+<script>
+// ── CURSOR ──────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX - 3 + 'px';
+  cursor.style.top  = e.clientY - 3 + 'px';
+});
+
+// ── STARS + NEBULA on canvas ────────────────────────────
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+let W, H, stars = [], nebula = [];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initStars() {
+  stars = [];
+  const n = Math.floor(W * H / 4500);
+  for (let i = 0; i < n; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4 + 0.2,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.003 + Math.random() * 0.005,
+      color: Math.random() > 0.85 ? '#e8d0a0' : '#f5e6d3'
+    });
+  }
+
+  nebula = [];
+  for (let i = 0; i < 5; i++) {
+    nebula.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      rx: 80 + Math.random() * 180,
+      ry: 60 + Math.random() * 120,
+      hue: Math.random() > 0.5 ? '201,169,110' : '201,122,138',
+      alpha: 0.03 + Math.random() * 0.04
+    });
+  }
+}
+
+let t = 0;
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // gradient bg
+  const grd = ctx.createRadialGradient(W*0.5, H*0.3, 0, W*0.5, H*0.5, Math.max(W,H)*0.8);
+  grd.addColorStop(0, '#100820');
+  grd.addColorStop(1, '#07040f');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  // nebula blobs
+  for (const n of nebula) {
+    ctx.save();
+    ctx.translate(n.x, n.y);
+    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, n.rx);
+    rg.addColorStop(0, `rgba(${n.hue},${n.alpha})`);
+    rg.addColorStop(1, `rgba(${n.hue},0)`);
+    ctx.fillStyle = rg;
+    ctx.scale(1, n.ry / n.rx);
+    ctx.beginPath();
+    ctx.arc(0, 0, n.rx, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // stars
+  t += 0.016;
+  for (const s of stars) {
+    const a = 0.25 + 0.65 * (0.5 + 0.5 * Math.sin(s.phase + t * s.speed));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = s.color.replace(')', `,${a})`).replace('rgb', 'rgba').replace('#f5e6d3', `rgba(245,230,211,${a})`).replace('#e8d0a0', `rgba(232,208,160,${a})`);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+resize();
+initStars();
+requestAnimationFrame(draw);
+window.addEventListener('resize', () => { resize(); initStars(); });
+
+// ── PETALS ──────────────────────────────────────────────
+const petalSymbols = ['🌸','✿','❀','🌺','❁'];
+function dropPetal() {
+  const p = document.createElement('div');
+  p.className = 'petal';
+  p.textContent = petalSymbols[Math.floor(Math.random() * petalSymbols.length)];
+  p.style.cssText = `
+    left: ${Math.random() * 100}vw;
+    top: -2rem;
+    font-size: ${0.8 + Math.random() * 0.8}rem;
+    animation-duration: ${6 + Math.random() * 6}s;
+    animation-delay: 0s;
+    opacity: 0;
+  `;
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 14000);
+}
+setInterval(dropPetal, 2200);
+
+// ── COUNTDOWN ───────────────────────────────────────────
+const target = new Date('2025-05-26T00:00:00');
+const ids = ['cd-d','cd-h','cd-m','cd-s'];
+let prev = [null, null, null, null];
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function tick() {
+  const diff = target - Date.now();
+  if (diff <= 0) {
+    ids.forEach((id,i) => document.getElementById(id).textContent = '00');
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000)  / 60000);
+  const s = Math.floor((diff % 60000)    / 1000);
+  [d,h,m,s].forEach((v,i) => {
+    const el = document.getElementById(ids[i]);
+    const str = pad(v);
+    if (str !== prev[i]) {
+      el.classList.remove('tick');
+      void el.offsetWidth;
+      el.classList.add('tick');
+      el.textContent = str;
+      prev[i] = str;
+    }
+  });
+}
+tick();
+setInterval(tick, 1000);
+
+// ── SCROLL REVEAL ────────────────────────────────────────
+const sections = document.querySelectorAll('.section');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+sections.forEach(s => io.observe(s));
+
+// ── CONFETTI CELEBRATION ─────────────────────────────────
+function celebrate() {
+  const colors = ['#c9a96e','#f5e6d3','#e8a0ae','#ffffff','#e8d0a0','#c97a8a','#a8c5da'];
+  for (let i = 0; i < 150; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      const size = 5 + Math.random() * 9;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      c.style.cssText = `
+        left: ${15 + Math.random() * 70}%;
+        top: -12px;
+        width: ${size}px;
+        height: ${size * (0.5 + Math.random())}px;
+        background: ${color};
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(c);
+      const dx = (Math.random() - 0.5) * 500;
+      const dy = window.innerHeight + 80;
+      const rot = (Math.random() - 0.5) * 900;
+      const dur = 1800 + Math.random() * 1400;
+      c.animate([
+        { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+        { transform: `translate(${dx}px,${dy}px) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration: dur, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' })
+      .onfinish = () => c.remove();
+    }, i * 15);
+  }
+}
+</script>
+</body>
+</html>
